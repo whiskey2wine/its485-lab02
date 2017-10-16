@@ -1,0 +1,93 @@
+<html>
+    <head>
+        <title>Leaflet Routing Machine Lab</title>
+<!--Step 1 --------------------------------->
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+        <link rel="stylesheet" href="./dist/leaflet-routing-machine.css" />
+        <link rel="stylesheet" href="./dist/Control.Geocoder.css" />
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+        <script src="./dist/leaflet-routing-machine.js"></script>
+        <script src="./dist/Control.Geocoder.js"></script>
+<!---end of step 1 ------------------------->
+<!--Step 2 -------------------------------->
+    <style>
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    </head>
+    <!-- Insert your code here ---->
+<body>
+    <div id="map" class="map"></div>
+<script>
+   var map = L.map('map').setView([13.751908, 100.539029], 13);
+   //initialize tile layer and add it to map
+   L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',{
+     attribute: '© OpenStreetMap contributors'
+   }).addTo(map);
+
+   var control = L.Routing.control({
+     waypoints: [
+       L.latLng(14.068860, 100.607822), //starting point
+       L.latLng(13.980708, 100.554199) //end point
+     ],
+     createMarker: function(i,wp) {
+       return L.marker(wp.latLng, {
+          draggable: true,
+          icon: L.icon({
+            iconUrl: './image/marker.png',
+            iconSize: [30,30]
+          })
+       });
+     },
+     //serviceUrl: 'http://203.131.209.91:5000/route/v1',
+     routeWhileDragging: true,
+     reverseWaypoints: true,
+     geocoder:L.Control.Geocoder.nominatim(),
+     showAlternatives: true,
+     useZoomParameter: true,
+     altLineOptions: {
+       styles:[{color: 'blue', opacity: 0.8, weight: 9}]
+     }
+   }).addTo(map);
+
+   control.on('routesfound', function(e) {
+     var distance = e.routes[0].summary.totalDistance;
+     var time = e.routes[0].summary.totalTime;
+  var result = "DISTANCE: " + distance/1000 + " km" + " TIME: " + time/60 + " m";
+     console.log(result);
+   });
+</script>
+
+<!-- step5 -->
+<script>
+    function createButton(label, container) {
+      var btn = L.DomUtil.create('button', '', container);
+      btn.setAttribute('type', 'button');
+      btn.innerHTML = label;
+      return btn;
+    }
+
+    map.on('click', function(e) {
+      var container = L.DomUtil.create('div'),
+      startBtn = createButton('Start from this location', container),
+      destBtn = createButton('Go to this location', container);
+
+      L.popup()
+        .setContent(container)
+        .setLatLng(e.latlng)
+        .openOn(map);
+      L.DomEvent.on(startBtn, 'click', function(){
+        control.spliceWaypoints(0, 1, e.latlng);
+        map.closePopup();
+      });
+      L.DomEvent.on(destBtn, 'click', function() {
+        control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        map.closePopup();
+      });
+    });
+</script>
+<!--end of step 5-->
+</body>
+</html>
