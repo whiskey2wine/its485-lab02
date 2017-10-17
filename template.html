@@ -26,7 +26,7 @@
 
 <body>
 <div style="display: flex;">
-    <div class="col-md-9 map" style="width: 100%; margin: 15px;" id="map"></div>
+    <div class="col-md-9 map" style="width: 100%; height: 95%; margin: 15px;" id="map"></div>
     <div id="forTable" class="col-md-3" style="margin: 15px 15px 15px 0;"></div>
 </div>
 
@@ -38,7 +38,7 @@
     }).addTo(map);
 
     var startpoint = {lat:14.068860,long:100.607822};
-    var setofendpoint = [{person:'john',lat:13.970708,long:100.554199},{person:'bank',lat:13.960708,long:100.554199},{person:'bacon',lat:13.950708,long:100.554199}];
+    var setofendpoint = [{person:'john',lat:14.02585099714951,long:100.51065444946288},{person:'bank',lat:13.888411540590027,long:100.58635711669922},{person:'bacon',lat:13.752724664396988,long:100.554199}];
     var setofresults = [];
     var setofitems = [];
     run();
@@ -153,6 +153,7 @@
             addTable();
             genTable();
             setofresults = [];
+            console.log(startpoint);
             map.closePopup();
         });
     });
