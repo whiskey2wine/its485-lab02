@@ -1,93 +1,165 @@
 <html>
-    <head>
-        <title>Leaflet Routing Machine Lab</title>
-<!--Step 1 --------------------------------->
-        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
-        <link rel="stylesheet" href="./dist/leaflet-routing-machine.css" />
-        <link rel="stylesheet" href="./dist/Control.Geocoder.css" />
-        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-        <script src="./dist/leaflet-routing-machine.js"></script>
-        <script src="./dist/Control.Geocoder.js"></script>
-<!---end of step 1 ------------------------->
-<!--Step 2 -------------------------------->
+
+<head>
+    <title>Leaflet Routing Machine Lab</title>
+    <!--Step 1 --------------------------------->
+    <script src="plugins/jquery-3.2.1.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link rel="stylesheet" href="./dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="./dist/Control.Geocoder.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="./dist/leaflet-routing-machine.js"></script>
+    <script src="./dist/Control.Geocoder.js"></script>
+    <link rel="stylesheet" type="text/css" href="plugins/DataTables/DataTables-1.10.16/css/jquery.dataTables.min.css" />
+    <script type="text/javascript" src="plugins/DataTables/DataTables-1.10.16/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="plugins/DataTables/Bootstrap-3.3.7/css/bootstrap.min.css">
+    <!---end of step 1 ------------------------->
+    <!--Step 2 -------------------------------->
     <style>
-      #map {
-        width: 100%;
-        height: 100%;
-      }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
     </style>
-    </head>
-    <!-- Insert your code here ---->
+</head>
+<!-- Insert your code here ---->
+
 <body>
-    <div id="map" class="map"></div>
+<div style="display: flex;">
+    <div class="col-md-9 map" style="width: 100%; margin: 15px;" id="map"></div>
+    <div id="forTable" class="col-md-3" style="margin: 15px 15px 15px 0;"></div>
+</div>
+
 <script>
-   var map = L.map('map').setView([13.751908, 100.539029], 13);
-   //initialize tile layer and add it to map
-   L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',{
-     attribute: '© OpenStreetMap contributors'
-   }).addTo(map);
+    var map = L.map('map').setView([13.751908, 100.539029], 13);
+    //initialize tile layer and add it to map
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribute: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-   var control = L.Routing.control({
-     waypoints: [
-       L.latLng(14.068860, 100.607822), //starting point
-       L.latLng(13.980708, 100.554199) //end point
-     ],
-     createMarker: function(i,wp) {
-       return L.marker(wp.latLng, {
-          draggable: true,
-          icon: L.icon({
-            iconUrl: './image/marker.png',
-            iconSize: [30,30]
-          })
-       });
-     },
-     //serviceUrl: 'http://203.131.209.91:5000/route/v1',
-     routeWhileDragging: true,
-     reverseWaypoints: true,
-     geocoder:L.Control.Geocoder.nominatim(),
-     showAlternatives: true,
-     useZoomParameter: true,
-     altLineOptions: {
-       styles:[{color: 'blue', opacity: 0.8, weight: 9}]
-     }
-   }).addTo(map);
+    var startpoint = {lat:14.068860,long:100.607822};
+    var setofendpoint = [{person:'john',lat:13.970708,long:100.554199},{person:'bank',lat:13.960708,long:100.554199},{person:'bacon',lat:13.950708,long:100.554199}];
+    var setofresults = [];
+    var setofitems = [];
+    run();
 
-   control.on('routesfound', function(e) {
-     var distance = e.routes[0].summary.totalDistance;
-     var time = e.routes[0].summary.totalTime;
-  var result = "DISTANCE: " + distance/1000 + " km" + " TIME: " + time/60 + " m";
-     console.log(result);
-   });
+    function run() {
+        console.log(startpoint);
+        for (var count = 0 ; count < setofendpoint.length; count++) {
+            setofitems[count] = L.Routing.control({
+                waypoints: [
+                    L.latLng(startpoint.lat, startpoint.long), //starting point
+                    L.latLng(setofendpoint[count].lat, setofendpoint[count].long) //end point
+                ],
+                createMarker: function(i,wp) {
+                    return L.marker(wp.latLng, {
+                        draggable: true,
+                        icon: L.icon({
+                            iconUrl: './image/marker.png',
+                            iconSize: [30,30]
+                        })
+                    });
+                },
+                routeWhileDragging: true,
+                reverseWaypoints: true,
+                geocoder:L.Control.Geocoder.nominatim(),
+                showAlternatives: true,
+                useZoomParameter: true,
+                altLineOptions: {
+                    styles:[{color: 'blue', opacity: 0.8, weight: 9}]
+                }
+            }).addTo(map).on('routesfound', function(e) {
+                var distance = e.routes[0].summary.totalDistance/1000;
+                distance = distance.toFixed(2);
+                var time = e.routes[0].summary.totalTime/60;
+                time = time.toFixed(0);
+                setofresults.push({distance:distance,time:time});
+            });
+        }
+
+        $( ".leaflet-top.leaflet-right" ).remove();
+    }
+
+    function genTable() {
+        var table = $('#friendDist').DataTable({
+            "dom": '<"top"f>rt<"bottom"i><"clear">',
+            scrollY:        '50vh',
+            scrollCollapse: true,
+            paging:         false,
+            "columnDefs": [ {
+                "searchable": false,
+                "orderable": false,
+                "targets": 0
+            },
+                {
+                    "render": function ( data, type, row ) {
+                        return data +' ('+ row[3]+' min)';
+                    },
+                    "targets": 1
+                },
+                { "visible": false,  "targets": [ 3 ] }],
+            "order": [[ 2, "asc" ]]
+        });
+
+        table.on( 'order.dt search.dt', function () {
+            table.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+                cell.innerHTML = i+1;
+            } );
+        } ).draw();
+    }
+
+    function addTable() {
+        $("#forTable").html("<table id='friendDist' class='stripe hover' cellspacing='0' width='100%'> <thead> <tr><th style='text-align: center;'>No.</th> <th style='text-align: center;'>Name (time)</th> <th style='text-align: center;'>Distance (Km.)</th> <th style='text-align: center;'>Time</th> </tr> </thead> <tbody> <tr> <td class='text-center'></td> <td id='person1'></td> <td id='dist1' class='text-center'></td> <td id='time1'></td> </tr> <tr> <td class='text-center'></td> <td id='person2'></td> <td id='dist2' class='text-center'></td> <td id='time2'></td> </tr> <tr> <td class='text-center'></td> <td id='person3'></td> <td id='dist3' class='text-center'></td> <td id='time3'></td> </tr> </tbody> </table>");
+        for(var i=0;i<setofresults.length;i++){
+            setofresults[i].person = setofendpoint[i].person;
+            for (var j=0; j<setofresults.length;j++) {
+                var num = j + 1;
+                document.getElementById("dist"+num).innerHTML = setofresults[j].distance;
+                document.getElementById("person"+num).innerHTML = setofendpoint[j].person;
+                document.getElementById("time"+num).innerHTML = setofresults[j].time;
+            }
+        }
+    }
+
+    setTimeout(addTable, 2000);
+
+    setTimeout(genTable, 2500);
+
 </script>
 
 <!-- step5 -->
 <script>
     function createButton(label, container) {
-      var btn = L.DomUtil.create('button', '', container);
-      btn.setAttribute('type', 'button');
-      btn.innerHTML = label;
-      return btn;
+        var btn = L.DomUtil.create('button', '', container);
+        btn.setAttribute('type', 'button');
+        btn.innerHTML = label;
+        return btn;
     }
 
     map.on('click', function(e) {
-      var container = L.DomUtil.create('div'),
-      startBtn = createButton('Start from this location', container),
-      destBtn = createButton('Go to this location', container);
+        var container = L.DomUtil.create('div'),
+            startBtn = createButton('Start from this location', container);
 
-      L.popup()
-        .setContent(container)
-        .setLatLng(e.latlng)
-        .openOn(map);
-      L.DomEvent.on(startBtn, 'click', function(){
-        control.spliceWaypoints(0, 1, e.latlng);
-        map.closePopup();
-      });
-      L.DomEvent.on(destBtn, 'click', function() {
-        control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
-        map.closePopup();
-      });
+        L.popup()
+            .setContent(container)
+            .setLatLng(e.latlng)
+            .openOn(map);
+        L.DomEvent.on(startBtn, 'click', function() {
+            startpoint.lat = e.latlng.lat;
+            startpoint.long = e.latlng.lng;
+            setofitems[0].spliceWaypoints(0, 1, e.latlng);
+            setofitems[1].spliceWaypoints(0, 1, e.latlng);
+            setofitems[2].spliceWaypoints(0, 1, e.latlng);
+            addTable();
+            genTable();
+            setofresults = [];
+            map.closePopup();
+        });
     });
+
 </script>
+
 <!--end of step 5-->
 </body>
+
 </html>
